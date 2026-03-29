@@ -20,7 +20,8 @@
                         highlight: '#3EAD92',
                         neutral: '#6E6F73',
                         accent: '#295E7E',
-                        danger: '#dc2626'
+                        danger: '#dc2626',
+                        warning: '#f59e0b'
                     }
                 }
             }
@@ -75,6 +76,7 @@
                             <tr>
                                 <th class="py-2 px-2">Harga (Rp)</th>
                                 <th class="py-2 px-2">Probabilitas (%)</th>
+                                <th class="py-2 px-2" title="Hasil Kalibrasi Logit (Otomatis)">Logit (%)</th>
                                 <th class="py-2 px-2" title="Margin/Toleransi (Standar Deviasi)">Koridor (±%)</th>
                                 <th class="py-2 px-2 text-center">Aksi</th>
                             </tr>
@@ -102,6 +104,27 @@
                     <li>1 - Pasti Tidak Beli &rarr; <b>2%</b></li>
                 </ul>
                 <p class="mt-2 text-xs italic">*Data yang di-paste otomatis dikonversi dan dirata-rata ke dalam tabel di atas.</p>
+            </div>
+
+            <!-- NEW: Metodologi Berdasarkan Conjointly -->
+            <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                <h3 class="font-bold mb-3 text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-book-open text-primary"></i> Catatan Metodologi
+                </h3>
+                <p class="text-xs text-neutral mb-3 leading-relaxed">
+                    Gabor-Granger sangat ideal untuk menemukan harga yang mengoptimalkan pendapatan saat <b>fitur produk sudah tetap (fixed)</b>. 
+                    Menurut praktik riset, metode ini memiliki dua bias perilaku responden yang saling mengimbangi:
+                </p>
+                <ul class="space-y-3 text-xs text-neutral">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-arrow-down text-danger mt-0.5"></i>
+                        <span><b>Understatement of WTP:</b> Responden sengaja merendahkan niat bayar mereka untuk "memanipulasi" Anda agar merilis produk dengan harga lebih murah.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-arrow-up text-highlight mt-0.5"></i>
+                        <span><b>Overstatement of purchase:</b> Responden cenderung melebih-lebihkan niat beli saat survei. Oleh karena itu, kita memitigasinya dengan konversi probabilitas yang konservatif (misal: "Pasti Beli" dikonversi hanya menjadi 60%, bukan 100%).</span>
+                    </li>
+                </ul>
             </div>
 
         </div>
@@ -135,13 +158,13 @@
             <!-- Chart Container -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-chart-area text-primary"></i> Kurva Permintaan & Pendapatan
+                    <i class="fas fa-chart-area text-primary"></i> Kurva Elastisitas Permintaan & Pendapatan
                 </h2>
                 <div class="relative h-80 w-full">
                     <canvas id="gaborChart"></canvas>
                 </div>
                 <div class="mt-4 text-sm text-neutral text-center">
-                    Grafik ini menunjukkan *trade-off* antara kenaikan harga yang menurunkan minat beli, dan dampaknya terhadap total pendapatan yang diharapkan.
+                    Grafik ini memvisualisasikan <b>Price Elasticity of Demand</b> (seberapa curam/sensitif pelanggan terhadap kenaikan harga) dan mengidentifikasi titik puncak pada kurva <b>Revenue vs. Price</b>.
                 </div>
             </div>
 
@@ -151,19 +174,57 @@
     <script>
         // Initial Data based on the provided image and "Advanced" model including Corridor (Margin)
         let pricingData = [
-            { id: 1, price: 100, probability: 43.1, margin: 2.5 },
-            { id: 2, price: 120, probability: 26.6, margin: 4.7 },
-            { id: 3, price: 140, probability: 13.5, margin: 4.7 },
-            { id: 4, price: 160, probability: 4.5, margin: 1.7 },
-            { id: 5, price: 180, probability: 2.7, margin: 0.7 }
+            { id: 1, price: 100, probability: 43.1, margin: 2.5, logit: 0 },
+            { id: 2, price: 120, probability: 26.6, margin: 4.7, logit: 0 },
+            { id: 3, price: 140, probability: 13.5, margin: 4.7, logit: 0 },
+            { id: 4, price: 160, probability: 4.5, margin: 1.7, logit: 0 },
+            { id: 5, price: 180, probability: 2.7, margin: 0.7, logit: 0 }
         ];
 
         let chartInstance = null;
 
         // Initialize App
         function init() {
+            computeMath();
             renderTable();
             calculateAndDraw();
+        }
+
+        // Auto Calculate Logit Regression
+        function computeMath() {
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            let validCount = 0;
+            
+            pricingData.forEach(d => {
+                let p = d.probability / 100;
+                if (p <= 0) p = 0.001;
+                if (p >= 1) p = 0.999;
+                
+                let y = Math.log(p / (1 - p));
+                let x = d.price;
+                
+                sumX += x;
+                sumY += y;
+                sumXY += x * y;
+                sumXX += x * x;
+                validCount++;
+            });
+
+            let slope = 0, intercept = 0;
+            if (validCount > 1) {
+                let meanX = sumX / validCount;
+                let meanY = sumY / validCount;
+                let numerator = sumXY - validCount * meanX * meanY;
+                let denominator = sumXX - validCount * meanX * meanX;
+                slope = denominator === 0 ? 0 : numerator / denominator;
+                intercept = meanY - slope * meanX;
+            }
+
+            pricingData.forEach((item) => {
+                let yFit = intercept + slope * item.price;
+                let pFit = 1 / (1 + Math.exp(-yFit));
+                item.logit = +(pFit * 100).toFixed(1);
+            });
         }
 
         // Render input table
@@ -180,6 +241,9 @@
                     </td>
                     <td class="py-2 px-1">
                         <input type="number" step="0.1" max="100" min="0" class="input-cell" value="${row.probability}" onchange="updateData(${index}, 'probability', this.value)">
+                    </td>
+                    <td class="py-2 px-1">
+                        <input type="number" readonly class="input-cell bg-slate-50 text-slate-400 cursor-not-allowed border-slate-200" value="${row.logit}" title="Dihitung otomatis">
                     </td>
                     <td class="py-2 px-1">
                         <input type="number" step="0.1" max="100" min="0" class="input-cell text-slate-500" value="${row.margin}" onchange="updateData(${index}, 'margin', this.value)">
@@ -199,6 +263,7 @@
             pricingData[index][field] = parseFloat(value) || 0;
             // Sort data by price automatically
             pricingData.sort((a, b) => a.price - b.price);
+            computeMath();
             renderTable();
             calculateAndDraw();
         }
@@ -213,8 +278,10 @@
                 id: newId,
                 price: lastPrice + step,
                 probability: 0,
-                margin: 0
+                margin: 0,
+                logit: 0
             });
+            computeMath();
             renderTable();
             calculateAndDraw();
         }
@@ -316,6 +383,7 @@
                 pricingData.splice(numCols);
             }
 
+            computeMath();
             renderTable();
             calculateAndDraw();
             alert(`Berhasil memproses ${dataMatrix.length} baris sampel data!`);
@@ -335,6 +403,7 @@
             const labels = [];
             const demandData = [];
             const marginData = [];
+            const logitData = [];
             const revenueData = [];
 
             pricingData.forEach(item => {
@@ -344,6 +413,7 @@
                 labels.push(formatRupiah(item.price));
                 demandData.push(item.probability);
                 marginData.push(item.margin || 0);
+                logitData.push(item.logit);
                 revenueData.push(revenue);
 
                 if (revenue > maxRevenue) {
@@ -357,10 +427,10 @@
             document.getElementById('maxRevenue').innerText = formatRupiah(maxRevenue);
 
             // Update Chart
-            drawChart(labels, demandData, marginData, revenueData);
+            drawChart(labels, demandData, marginData, logitData, revenueData);
         }
 
-        function drawChart(labels, demandData, marginData, revenueData) {
+        function drawChart(labels, demandData, marginData, logitData, revenueData) {
             const ctx = document.getElementById('gaborChart').getContext('2d');
 
             if (chartInstance) {
@@ -426,6 +496,20 @@
                             pointHoverRadius: 7,
                             fill: false,
                             tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Model Logit (Terkalibrasi)',
+                            type: 'line',
+                            data: logitData,
+                            borderColor: '#f59e0b', // warning/amber color
+                            backgroundColor: '#f59e0b',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            tension: 0.4,
                             yAxisID: 'y'
                         }
                     ]
