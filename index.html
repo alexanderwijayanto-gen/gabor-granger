@@ -39,7 +39,7 @@
     <nav class="bg-primary text-white p-4 shadow-md">
         <div class="max-w-6xl mx-auto flex items-center gap-3">
             <i class="fas fa-chart-line text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wide">Analisis Harga: Metode Gabor-Granger</h1>
+            <h1 class="text-xl font-bold tracking-wide">Analisis Harga: Metode Gabor-Granger & Optimisasi Profit</h1>
         </div>
     </nav>
 
@@ -54,7 +54,7 @@
                     <i class="fas fa-paste text-primary"></i> Paste Data Mentah
                 </h2>
                 <p class="text-sm text-neutral mb-4">
-                    Copy data skala niat beli (1-5) dari Excel. (Baris = responden, Kolom = harga 100, 120, 140, 160, 180) dan paste di bawah ini:
+                    Copy data skala niat beli (1-5) dari Excel. (Baris = responden, Kolom = harga) dan paste di bawah ini:
                 </p>
                 <textarea id="bulkInput" rows="4" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary mb-3" placeholder="Contoh (copy dari excel):&#10;4&#9;3&#9;2&#9;1&#9;1&#10;5&#9;4&#9;3&#9;2&#9;1"></textarea>
                 <button onclick="processBulkData()" class="w-full bg-primary text-white py-2 rounded-lg hover:brightness-110 transition-all font-medium">
@@ -62,14 +62,31 @@
                 </button>
             </div>
             
+            <!-- Pengaturan Biaya & Profit -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-primary"></i> Pengaturan Profit
+                </h2>
+                <p class="text-sm text-neutral mb-4">
+                    Masukkan biaya variabel dan asumsi ukuran pasar untuk menghitung potensi keuntungan (Profit = (Harga - Biaya) x Volume).
+                </p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-neutral mb-1 font-semibold">Biaya Variabel per Unit (Rp)</label>
+                        <input type="number" id="varCost" class="w-full border border-slate-300 rounded-lg p-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" value="50" onchange="calculateAndDraw()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-neutral mb-1 font-semibold">Estimasi Total Target Pasar (Orang/Unit)</label>
+                        <input type="number" id="marketSize" class="w-full border border-slate-300 rounded-lg p-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" value="10000" onchange="calculateAndDraw()">
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                     <i class="fas fa-table text-primary"></i> Data Titik Harga
                 </h2>
-                <p class="text-sm text-neutral mb-4">
-                    Masukkan titik harga yang Anda uji dan rata-rata probabilitas pembelian (dalam persen) pada harga tersebut. Probabilitas biasanya didapat dari konversi skala survei.
-                </p>
-
+                
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left" id="dataTable">
                         <thead class="bg-slate-50 text-neutral font-semibold border-b border-slate-200">
@@ -92,20 +109,6 @@
                 </button>
             </div>
 
-            <!-- Info Box -->
-            <div class="bg-accent/10 border border-accent/30 p-4 rounded-xl text-sm text-accent">
-                <h3 class="font-bold mb-2"><i class="fas fa-info-circle mr-1"></i> Referensi Konversi Niat Beli</h3>
-                <p class="mb-2">Berdasarkan data skenario "Advanced", skala niat beli (1-5) dikonversi ke probabilitas sebagai berikut:</p>
-                <ul class="list-disc list-inside space-y-1 ml-1 text-xs">
-                    <li>5 - Pasti Beli &rarr; <b>60%</b></li>
-                    <li>4 - Kemungkinan Beli &rarr; <b>40%</b></li>
-                    <li>3 - Mungkin Beli &rarr; <b>20%</b></li>
-                    <li>2 - Kemungkinan Tidak Beli &rarr; <b>4%</b></li>
-                    <li>1 - Pasti Tidak Beli &rarr; <b>2%</b></li>
-                </ul>
-                <p class="mt-2 text-xs italic">*Data yang di-paste otomatis dikonversi dan dirata-rata ke dalam tabel di atas.</p>
-            </div>
-
             <!-- NEW: Metodologi Berdasarkan Conjointly -->
             <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
                 <h3 class="font-bold mb-3 text-slate-800 flex items-center gap-2">
@@ -118,11 +121,11 @@
                 <ul class="space-y-3 text-xs text-neutral">
                     <li class="flex items-start gap-2">
                         <i class="fas fa-arrow-down text-danger mt-0.5"></i>
-                        <span><b>Understatement of WTP:</b> Responden sengaja merendahkan niat bayar mereka untuk "memanipulasi" Anda agar merilis produk dengan harga lebih murah.</span>
+                        <span><b>Understatement of WTP:</b> Responden sengaja merendahkan niat bayar mereka.</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-arrow-up text-highlight mt-0.5"></i>
-                        <span><b>Overstatement of purchase:</b> Responden cenderung melebih-lebihkan niat beli saat survei. Oleh karena itu, kita memitigasinya dengan konversi probabilitas yang konservatif (misal: "Pasti Beli" dikonversi hanya menjadi 60%, bukan 100%).</span>
+                        <span><b>Overstatement of purchase:</b> Responden cenderung melebih-lebihkan niat beli. Kita memitigasinya dengan konversi probabilitas yang konservatif (Skala 5 = 60%, 4 = 40%, dst).</span>
                     </li>
                 </ul>
             </div>
@@ -132,39 +135,68 @@
         <!-- Panel Kanan: Hasil & Grafik -->
         <div class="lg:col-span-2 space-y-6">
             
-            <!-- Summary Cards -->
+            <!-- Summary Cards: 2x2 Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-highlight flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-neutral font-medium mb-1">Harga Optimal (Revenue Maksimal)</p>
-                        <h3 class="text-3xl font-bold text-slate-800" id="optimalPrice">Rp 0</h3>
-                    </div>
-                    <div class="bg-highlight/10 p-3 rounded-full text-highlight">
-                        <i class="fas fa-tag text-2xl"></i>
-                    </div>
-                </div>
                 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-accent flex items-center justify-between">
+                <!-- Revenue Optimal Price -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-accent flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-neutral font-medium mb-1">Maksimum Indeks Pendapatan</p>
-                        <h3 class="text-3xl font-bold text-slate-800" id="maxRevenue">0</h3>
+                        <p class="text-xs text-neutral font-bold mb-1 uppercase tracking-wider">Harga Optimal (Pendapatan)</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="optimalPriceRev">Rp 0</h3>
+                        <p class="text-sm text-accent mt-1 font-medium" id="maxRevenue">Rp 0 Total</p>
                     </div>
-                    <div class="bg-accent/10 p-3 rounded-full text-accent">
-                        <i class="fas fa-coins text-2xl"></i>
+                    <div class="bg-accent/10 p-3 rounded-full text-accent hidden sm:block">
+                        <i class="fas fa-money-bill-wave text-2xl"></i>
                     </div>
                 </div>
+
+                <!-- Profit Optimal Price -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-primary flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-neutral font-bold mb-1 uppercase tracking-wider">Harga Optimal (Profit)</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="optimalPriceProf">Rp 0</h3>
+                        <p class="text-sm text-primary mt-1 font-medium" id="maxProfit">Rp 0 Total</p>
+                    </div>
+                    <div class="bg-primary/10 p-3 rounded-full text-primary hidden sm:block">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Chart Container -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-chart-area text-primary"></i> Kurva Elastisitas Permintaan & Pendapatan
+                    <i class="fas fa-chart-area text-primary"></i> Kurva Permintaan, Pendapatan, dan Profit (Gabungan)
                 </h2>
-                <div class="relative h-80 w-full">
+                <div class="relative h-96 w-full">
                     <canvas id="gaborChart"></canvas>
                 </div>
                 <div class="mt-4 text-sm text-neutral text-center">
-                    Grafik ini memvisualisasikan <b>Price Elasticity of Demand</b> (seberapa curam/sensitif pelanggan terhadap kenaikan harga) dan mengidentifikasi titik puncak pada kurva <b>Revenue vs. Price</b>.
+                    Grafik membandingkan <b>Kurva Pendapatan</b> (biru) dan <b>Kurva Profit Bersih</b> (hijau). Seringkali harga yang memaksimalkan pendapatan berbeda dengan harga yang memaksimalkan profit karena faktor biaya produksi.
+                </div>
+            </div>
+
+            <!-- Sub Charts: Revenue & Profit Terpisah -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Chart Pendapatan -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="text-md font-bold mb-3 flex items-center gap-2 text-accent">
+                        <i class="fas fa-money-bill-wave"></i> Kurva Total Pendapatan
+                    </h2>
+                    <div class="relative h-64 w-full">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Chart Profit -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="text-md font-bold mb-3 flex items-center gap-2 text-primary">
+                        <i class="fas fa-chart-line"></i> Kurva Total Profit
+                    </h2>
+                    <div class="relative h-64 w-full">
+                        <canvas id="profitChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -182,6 +214,8 @@
         ];
 
         let chartInstance = null;
+        let revenueChartInstance = null;
+        let profitChartInstance = null;
 
         // Initialize App
         function init() {
@@ -396,41 +430,62 @@
 
         // Main Calculation and Chart Rendering
         function calculateAndDraw() {
-            // Calculate Expected Revenue = Price * (Probability / 100)
-            let maxRevenue = -1;
-            let optimalPrice = 0;
+            // Ambil Data Parameter dari Input DOM
+            const varCost = parseFloat(document.getElementById('varCost').value) || 0;
+            const marketSize = parseFloat(document.getElementById('marketSize').value) || 1;
+
+            let maxRevenue = -Infinity;
+            let optimalPriceRev = 0;
+            let maxProfit = -Infinity;
+            let optimalPriceProf = 0;
 
             const labels = [];
             const demandData = [];
             const marginData = [];
             const logitData = [];
             const revenueData = [];
+            const profitData = [];
 
             pricingData.forEach(item => {
                 const probDecimal = item.probability / 100;
-                const revenue = item.price * probDecimal;
+                
+                // Menghitung Unit Terjual Berdasarkan Asumsi Market Size
+                const unitSold = probDecimal * marketSize;
+                
+                // Perhitungan Pendapatan dan Profit (sesuai dokumen word referensi)
+                const revenue = item.price * unitSold;
+                const profit = (item.price - varCost) * unitSold;
                 
                 labels.push(formatRupiah(item.price));
                 demandData.push(item.probability);
                 marginData.push(item.margin || 0);
                 logitData.push(item.logit);
                 revenueData.push(revenue);
+                profitData.push(profit);
 
                 if (revenue > maxRevenue) {
                     maxRevenue = revenue;
-                    optimalPrice = item.price;
+                    optimalPriceRev = item.price;
+                }
+                
+                if (profit > maxProfit) {
+                    maxProfit = profit;
+                    optimalPriceProf = item.price;
                 }
             });
 
-            // Update Summary Cards
-            document.getElementById('optimalPrice').innerText = formatRupiah(optimalPrice);
-            document.getElementById('maxRevenue').innerText = formatRupiah(maxRevenue);
+            // Update DOM Summary Cards
+            document.getElementById('optimalPriceRev').innerText = formatRupiah(optimalPriceRev);
+            document.getElementById('maxRevenue').innerText = `Total: ${formatRupiah(maxRevenue)}`;
+            
+            document.getElementById('optimalPriceProf').innerText = formatRupiah(optimalPriceProf);
+            document.getElementById('maxProfit').innerText = `Total: ${formatRupiah(maxProfit)}`;
 
             // Update Chart
-            drawChart(labels, demandData, marginData, logitData, revenueData);
+            drawChart(labels, demandData, marginData, logitData, revenueData, profitData);
         }
 
-        function drawChart(labels, demandData, marginData, logitData, revenueData) {
+        function drawChart(labels, demandData, marginData, logitData, revenueData, profitData) {
             const ctx = document.getElementById('gaborChart').getContext('2d');
 
             if (chartInstance) {
@@ -451,11 +506,21 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Ekspektasi Pendapatan (Rp)',
+                            label: 'Total Pendapatan (Rp)',
                             type: 'bar',
                             data: revenueData,
-                            backgroundColor: 'rgba(41, 94, 126, 0.2)', // accent color #295E7E with opacity
+                            backgroundColor: 'rgba(41, 94, 126, 0.4)', // accent color blue/grey
                             borderColor: '#295E7E',
+                            borderWidth: 1,
+                            yAxisID: 'y1',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Total Profit Bersih (Rp)',
+                            type: 'bar',
+                            data: profitData,
+                            backgroundColor: 'rgba(25, 122, 86, 0.8)', // primary color green
+                            borderColor: '#197A56',
                             borderWidth: 1,
                             yAxisID: 'y1',
                             borderRadius: 4
@@ -482,8 +547,8 @@
                             borderDash: [5, 5],
                             pointRadius: 0,
                             pointHoverRadius: 0,
-                            fill: '-1', // Mengisi area antara batas bawah observasi dan batas atas observasi
-                            backgroundColor: 'rgba(62, 173, 146, 0.1)', // Warna arsiran koridor lebih transparan
+                            fill: '-1', 
+                            backgroundColor: 'rgba(62, 173, 146, 0.1)', 
                             yAxisID: 'y',
                             tension: 0.3
                         },
@@ -491,7 +556,7 @@
                             label: 'Probabilitas Pembelian / Permintaan (%)',
                             type: 'line',
                             data: demandData,
-                            borderColor: '#3EAD92', // highlight color #3EAD92
+                            borderColor: '#3EAD92', 
                             backgroundColor: '#3EAD92',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
@@ -506,7 +571,7 @@
                             label: 'Batas Atas Koridor (Logit)',
                             type: 'line',
                             data: upperLogit,
-                            borderColor: 'rgba(245, 158, 11, 0.3)', // warna oranye transparan
+                            borderColor: 'rgba(245, 158, 11, 0.3)', 
                             borderWidth: 1,
                             borderDash: [5, 5],
                             pointRadius: 0,
@@ -524,8 +589,8 @@
                             borderDash: [5, 5],
                             pointRadius: 0,
                             pointHoverRadius: 0,
-                            fill: '-1', // Mengisi area antara batas bawah logit dan batas atas logit
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)', // Arsiran koridor logit
+                            fill: '-1', 
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)', 
                             yAxisID: 'y',
                             tension: 0.4
                         },
@@ -533,7 +598,7 @@
                             label: 'Model Logit (Terkalibrasi)',
                             type: 'line',
                             data: logitData,
-                            borderColor: '#f59e0b', // warning/amber color
+                            borderColor: '#f59e0b', 
                             backgroundColor: '#f59e0b',
                             borderWidth: 2,
                             borderDash: [5, 5],
@@ -560,9 +625,9 @@
                                     if (label) {
                                         label += ': ';
                                     }
-                                    if (context.datasetIndex === 0) { // Revenue
+                                    if (context.dataset.type === 'bar') { // Revenue & Profit
                                         label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(context.raw);
-                                    } else { // Demand
+                                    } else { // Demand & Logit
                                         label += context.raw + '%';
                                     }
                                     return label;
@@ -570,7 +635,10 @@
                             }
                         },
                         legend: {
-                            position: 'bottom'
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12
+                            }
                         }
                     },
                     scales: {
@@ -597,13 +665,87 @@
                             position: 'right',
                             title: {
                                 display: true,
-                                text: 'Ekspektasi Pendapatan'
+                                text: 'Nilai (Rp)'
                             },
                             grid: {
-                                drawOnChartArea: false, // only want the grid lines for one axis to show up
+                                drawOnChartArea: false, 
                             },
                             beginAtZero: true
                         }
+                    }
+                }
+            });
+
+            // --- Chart Terpisah: Pendapatan ---
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChartInstance) {
+                revenueChartInstance.destroy();
+            }
+            revenueChartInstance = new Chart(ctxRev, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Pendapatan (Rp)',
+                        data: revenueData,
+                        backgroundColor: 'rgba(41, 94, 126, 0.8)',
+                        borderColor: '#295E7E',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }, // Sembunyikan legend agar tidak sempit
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // --- Chart Terpisah: Profit ---
+            const ctxProf = document.getElementById('profitChart').getContext('2d');
+            if (profitChartInstance) {
+                profitChartInstance.destroy();
+            }
+            profitChartInstance = new Chart(ctxProf, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Profit Bersih (Rp)',
+                        data: profitData,
+                        backgroundColor: 'rgba(25, 122, 86, 0.8)',
+                        borderColor: '#197A56',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
                     }
                 }
             });
