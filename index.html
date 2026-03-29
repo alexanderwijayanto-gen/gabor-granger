@@ -437,9 +437,13 @@
                 chartInstance.destroy();
             }
 
-            // Hitung data batas atas dan bawah untuk koridor
+            // Hitung data batas atas dan bawah untuk koridor observasi
             const upperData = demandData.map((val, i) => Math.min(100, val + marginData[i]));
             const lowerData = demandData.map((val, i) => Math.max(0, val - marginData[i]));
+
+            // Hitung data batas atas dan bawah untuk koridor logit
+            const upperLogit = logitData.map((val, i) => Math.min(100, val + marginData[i]));
+            const lowerLogit = logitData.map((val, i) => Math.max(0, val - marginData[i]));
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
@@ -457,10 +461,10 @@
                             borderRadius: 4
                         },
                         {
-                            label: 'Batas Atas Koridor',
+                            label: 'Batas Atas Koridor (Obs)',
                             type: 'line',
                             data: upperData,
-                            borderColor: 'rgba(62, 173, 146, 0.4)',
+                            borderColor: 'rgba(62, 173, 146, 0.3)',
                             borderWidth: 1,
                             borderDash: [5, 5],
                             pointRadius: 0,
@@ -470,16 +474,16 @@
                             tension: 0.3
                         },
                         {
-                            label: 'Batas Bawah Koridor',
+                            label: 'Batas Bawah Koridor (Obs)',
                             type: 'line',
                             data: lowerData,
-                            borderColor: 'rgba(62, 173, 146, 0.4)',
+                            borderColor: 'rgba(62, 173, 146, 0.3)',
                             borderWidth: 1,
                             borderDash: [5, 5],
                             pointRadius: 0,
                             pointHoverRadius: 0,
-                            fill: '-1', // Mengisi area antara batas bawah (dataset ini) dan batas atas (dataset sebelumnya)
-                            backgroundColor: 'rgba(62, 173, 146, 0.15)', // Warna arsiran koridor
+                            fill: '-1', // Mengisi area antara batas bawah observasi dan batas atas observasi
+                            backgroundColor: 'rgba(62, 173, 146, 0.1)', // Warna arsiran koridor lebih transparan
                             yAxisID: 'y',
                             tension: 0.3
                         },
@@ -497,6 +501,33 @@
                             fill: false,
                             tension: 0.3,
                             yAxisID: 'y'
+                        },
+                        {
+                            label: 'Batas Atas Koridor (Logit)',
+                            type: 'line',
+                            data: upperLogit,
+                            borderColor: 'rgba(245, 158, 11, 0.3)', // warna oranye transparan
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            fill: false,
+                            yAxisID: 'y',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Batas Bawah Koridor (Logit)',
+                            type: 'line',
+                            data: lowerLogit,
+                            borderColor: 'rgba(245, 158, 11, 0.3)',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            fill: '-1', // Mengisi area antara batas bawah logit dan batas atas logit
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)', // Arsiran koridor logit
+                            yAxisID: 'y',
+                            tension: 0.4
                         },
                         {
                             label: 'Model Logit (Terkalibrasi)',
